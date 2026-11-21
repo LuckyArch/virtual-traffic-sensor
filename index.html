@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>LintasSim — Simulasi Sensor E-Tilang oleh Zann</title>
+  <style>
+    :root {
+      --bg: #0c0c0e;
+      --card: #131316;
+      --well: #0e0e11;
+      --elevated: #1c1c21;
+      --border: #24242a;
+      --border-hi: #34343d;
+      --ink: #f4f4f5;
+      --ink-2: #a1a1aa;
+      --ink-3: #71717a;
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.14);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245, 158, 11, 0.14);
+      --green: #22c55e;
+      --green-dim: rgba(34, 197, 94, 0.14);
+      --sky: #38bdf8;
+      --sky-dim: rgba(56, 189, 248, 0.14);
+      --r-xl: 18px;
+      --r-lg: 12px;
+      --r-md: 9px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100dvh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 20px 16px 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .topbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      background: var(--elevated);
+      border: 1px solid var(--border-hi);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+    }
+
+    .mark-dots {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .mark-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: block;
+    }
+
+    .brand h1 {
+      font-size: 1rem;
+      font-weight: 650;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--ink-2);
+      background: var(--well);
+      border: 1px solid var(--border);
+      padding: 2px 7px;
+      border-radius: 6px;
+    }
+
+    .brand p {
+      font-size: 0.8rem;
+      color: var(--ink-3);
+      margin-top: 1px;
+    }
+
+    .top-right {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .input-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--well);
+      border: 1px solid var(--border);
+      font-size: 0.76rem;
+      color: var(--ink-2);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 3px var(--green-dim);
+    }
+
+    .btn {
+      appearance: none;
+      font-family: inherit;
+      font-size: 0.78rem;
+      font-weight: 550;
+      color: var(--ink);
+      background: var(--elevated);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--r-md);
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+    }
+
+    .btn:hover { background: #26262d; border-color: #42424d; }
+    .btn:active { transform: translateY(1px); }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: var(--border);
+      color: var(--ink-2);
+    }
+
+    .btn-ghost:hover { color: var(--ink); background: var(--elevated); }
+
+    .btn-on {
+      background: var(--green-dim);
+      border-color: rgba(34, 197, 94, 0.35);
+      color: #86efac;
+    }
+
+    .bento {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .tile {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--r-xl);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .tile-road { grid-column: span 7; grid-row: span 2; }
+    .tile-speed { grid-column: span 5; }
+    .tile-ctrl { grid-column: span 5; }
+    .tile-stats { grid-column: span 4; }
+    .tile-pins { grid-column: span 4; }
+    .tile-logs { grid-column: span 4; }
+
+    .tile-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 13px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tile-title {
+      font-size: 0.84rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .tile-sub {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--ink-3);
+    }
+
+    .tile-body {
+      padding: 15px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .road-box {
+      position: relative;
+      flex: 1;
+      min-height: 460px;
+      background: #09090b;
+    }
+
+    #road {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: crosshair;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .road-hud {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .hud-box {
+      background: rgba(12, 12, 14, 0.82);
+      border: 1px solid var(--border-hi);
+      backdrop-filter: blur(8px);
+      border-radius: var(--r-lg);
+      padding: 8px 12px;
+      min-width: 126px;
+    }
+
+    .hud-k {
+      font-size: 0.68rem;
+      color: var(--ink-3);
+      display: block;
+    }
+
+    .hud-v {
+      font-family: var(--mono);
+      font-size: 0.94rem;
+      font-weight: 650;
+      font-variant-numeric: tabular-nums;
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    .bar-bg {
+      height: 3px;
+      width: 100%;
+      border-radius: 99px;
+      background: #27272a;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 100%;
+      background: var(--green);
+      transition: background 0.2s;
+    }
+
+    .notice {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translate(-50%, 8px);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .notice.show { opacity: 1; transform: translate(-50%, 0); }
+    .notice.bad { background: var(--red); color: #fff; box-shadow: 0 8px 22px rgba(239, 68, 68, 0.35); }
+    .notice.ok { background: var(--green); color: #052e16; box-shadow: 0 8px 22px rgba(34, 197, 94, 0.28); }
+
+    .speed-top {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .speed-num {
+      font-family: var(--mono);
+      font-size: 2.35rem;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .speed-unit {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--ink-3);
+      margin-left: 4px;
+    }
+
+    .speed-meta {
+      text-align: right;
+      font-size: 0.76rem;
+      color: var(--ink-2);
+    }
+
+    .speed-meta strong {
+      font-family: var(--mono);
+      color: var(--ink);
+    }
+
+    .spark-wrap {
+      height: 92px;
+      width: 100%;
+      background: var(--well);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+    }
+
+    #spark { display: block; width: 100%; height: 100%; }
+
+    .field-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+      color: var(--ink-2);
+      margin-bottom: 8px;
+    }
+
+    .val-pill {
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      font-weight: 600;
+      color: var(--ink);
+      background: var(--well);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 6px;
+      border-radius: 99px;
+      background: var(--well);
+      border: 1px solid var(--border);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: var(--ink);
+      border: 2px solid var(--bg);
+      box-shadow: 0 0 0 1px var(--border-hi);
+      cursor: pointer;
+    }
+
+    .seg {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 4px;
+      background: var(--well);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+    }
+
+    .seg button {
+      font-family: inherit;
+      font-size: 0.76rem;
+      font-weight: 550;
+      padding: 8px 4px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink-2);
+      cursor: pointer;
+      transition: 0.14s;
+    }
+
+    .seg button:hover { color: var(--ink); }
+    .seg button.active { background: var(--elevated); color: var(--ink); border-color: var(--border-hi); }
+    .seg button.c-red.active { background: var(--red-dim); color: #fca5a5; border-color: rgba(239, 68, 68, 0.35); }
+    .seg button.c-amber.active { background: var(--amber-dim); color: #fcd34d; border-color: rgba(245, 158, 11, 0.35); }
+    .seg button.c-green.active { background: var(--green-dim); color: #86efac; border-color: rgba(34, 197, 94, 0.35); }
+
+    .hero-stat {
+      background: var(--well);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hero-stat .lbl { font-size: 0.78rem; color: var(--ink-2); }
+    .hero-stat .num {
+      font-family: var(--mono);
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .mini-stat {
+      background: var(--well);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 10px 12px;
+    }
+
+    .mini-stat .lbl { font-size: 0.72rem; color: var(--ink-3); }
+    .mini-stat .num {
+      font-family: var(--mono);
+      font-size: 1.15rem;
+      font-weight: 650;
+      margin-top: 3px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pin-list {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .pin-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 11px;
+      background: var(--well);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      font-family: var(--mono);
+      font-size: 0.74rem;
+    }
+
+    .pin-id {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--ink-2);
+    }
+
+    .led {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #27272a;
+      transition: background 0.12s, box-shadow 0.12s;
+    }
+
+    .pin-row.hi-red .led { background: var(--red); box-shadow: 0 0 8px var(--red); }
+    .pin-row.hi-amber .led { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+    .pin-row.hi-green .led { background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .pin-row.hi-sky .led { background: var(--sky); box-shadow: 0 0 8px var(--sky); }
+
+    .pin-val {
+      font-size: 0.68rem;
+      font-weight: 650;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: var(--elevated);
+      color: var(--ink-3);
+    }
+
+    .pin-row.hi-red .pin-val { background: var(--red-dim); color: #fca5a5; }
+    .pin-row.hi-amber .pin-val { background: var(--amber-dim); color: #fcd34d; }
+    .pin-row.hi-green .pin-val { background: var(--green-dim); color: #86efac; }
+    .pin-row.hi-sky .pin-val { background: var(--sky-dim); color: #7dd3fc; }
+
+    .log-box {
+      max-height: 220px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .log-box::-webkit-scrollbar { width: 5px; }
+    .log-box::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 99px; }
+
+    .log-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 9px 16px;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.76rem;
+    }
+
+    .log-item:last-child { border-bottom: none; }
+
+    .log-main {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .log-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--red);
+    }
+
+    .log-item.ok .log-dot { background: var(--green); }
+    .log-item.ok .log-txt { color: var(--ink-2); }
+
+    .log-txt {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .log-t {
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--ink-3);
+      flex-shrink: 0;
+    }
+
+    .log-empty {
+      padding: 36px 16px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--ink-3);
+    }
+
+    .foot {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 6px;
+      font-size: 0.76rem;
+      color: var(--ink-3);
+    }
+
+    .foot strong { color: var(--ink-2); font-weight: 600; }
+
+    @media (max-width: 960px) {
+      .tile-road,
+      .tile-speed,
+      .tile-ctrl { grid-column: span 12; grid-row: auto; }
+      .tile-stats,
+      .tile-pins { grid-column: span 6; }
+      .tile-logs { grid-column: span 12; }
+      .road-box { min-height: 390px; }
+    }
+
+    @media (max-width: 620px) {
+      .page { padding: 12px 10px 24px; }
+      .tile-stats,
+      .tile-pins,
+      .tile-logs { grid-column: span 12; }
+      .road-box { min-height: 350px; }
+      .speed-num { font-size: 1.95rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true">
+          <div class="mark-dots">
+            <span style="background: var(--red)"></span>
+            <span style="background: var(--amber)"></span>
+            <span style="background: var(--green)"></span>
+          </div>
+        </div>
+        <div>
+          <h1>LintasSim <span class="tag">v2.1</span></h1>
+          <p>Geser mouse di PC atau sapukan jari di HP melintasi garis sensor jalan.</p>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <div class="input-chip">
+          <span class="live-dot"></span>
+          <span id="inMode">Menunggu gerakan</span>
+        </div>
+        <button id="btnBuz" class="btn btn-on">Suara: Aktif</button>
+        <button id="btnCsv" class="btn">Unduh CSV</button>
+        <button id="btnReset" class="btn btn-ghost">Reset</button>
+      </div>
+    </header>
+
+    <main class="bento">
+      <section class="tile tile-road">
+        <div class="tile-head">
+          <span class="tile-title">Area Pantau Jalan</span>
+          <span class="tile-sub">Sensor Optik D7 • 60 FPS</span>
+        </div>
+        <div class="road-box">
+          <canvas id="road"></canvas>
+          <div class="road-hud">
+            <div class="hud-box">
+              <span class="hud-k">Kecepatan Saat Ini</span>
+              <span class="hud-v"><span id="hudSpd">0</span><small style="color: var(--ink-3); font-weight: 500;">km/jam</small></span>
+            </div>
+            <div class="hud-box">
+              <span class="hud-k">Lampu Lalu Lintas</span>
+              <span class="hud-v">
+                <span id="hudLgt">Hijau</span>
+                <small id="hudTmr" style="color: var(--ink-3); font-weight: 500;">5.0d</small>
+              </span>
+              <div class="bar-bg"><div class="bar-fill" id="hudBar"></div></div>
+            </div>
+          </div>
+          <div class="notice" id="notice"></div>
+        </div>
+      </section>
+
+      <section class="tile tile-speed">
+        <div class="tile-head">
+          <span class="tile-title">Grafik Kecepatan</span>
+          <span class="tile-sub">Batas: <span id="limHead">60</span> km/jam</span>
+        </div>
+        <div class="tile-body">
+          <div class="speed-top">
+            <div>
+              <span class="speed-num" id="bigSpd">0</span>
+              <span class="speed-unit">km/jam</span>
+            </div>
+            <div class="speed-meta">
+              <div>Puncak: <strong id="peakSpd">0</strong> km/jam</div>
+              <div id="spdState" style="color: var(--ink-3); margin-top: 2px;">Diam</div>
+            </div>
+          </div>
+          <div class="spark-wrap">
+            <canvas id="spark"></canvas>
+          </div>
+        </div>
+      </section>
+
+      <section class="tile tile-ctrl">
+        <div class="tile-head">
+          <span class="tile-title">Kendali Lampu &amp; Batas</span>
+          <span class="tile-sub">Pengaturan Langsung</span>
+        </div>
+        <div class="tile-body">
+          <div>
+            <div class="field-top">
+              <span>Batas Kecepatan Aman</span>
+              <span class="val-pill"><span id="limTxt">60</span> km/jam</span>
+            </div>
+            <input type="range" id="limInput" min="25" max="140" step="5" value="60" />
+          </div>
+
+          <div>
+            <div class="field-top" style="margin-bottom: 6px;">
+              <span>Mode Lampu</span>
+              <span style="font-size: 0.72rem; color: var(--ink-3);">Klik untuk tahan warna</span>
+            </div>
+            <div class="seg">
+              <button id="mAuto" class="active">Otomatis</button>
+              <button id="mRed" class="c-red">Merah</button>
+              <button id="mYellow" class="c-amber">Kuning</button>
+              <button id="mGreen" class="c-green">Hijau</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tile tile-stats">
+        <div class="tile-head">
+          <span class="tile-title">Rekap Pelanggaran</span>
+          <span class="tile-sub">Sesi Ini</span>
+        </div>
+        <div class="tile-body">
+          <div class="hero-stat">
+            <div>
+              <div class="lbl">Total Kena Tilang</div>
+              <div style="font-size: 0.72rem; color: var(--ink-3); margin-top: 2px;">Ngebut atau terobos merah</div>
+            </div>
+            <div class="num" id="stTot">0</div>
+          </div>
+          <div class="mini-grid">
+            <div class="mini-stat">
+              <div class="lbl">Batas Kecepatan</div>
+              <div class="num" style="color: var(--amber)" id="stSpd">0</div>
+            </div>
+            <div class="mini-stat">
+              <div class="lbl">Terobos Merah</div>
+              <div class="num" style="color: var(--red)" id="stRed">0</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tile tile-pins">
+        <div class="tile-head">
+          <span class="tile-title">Status Pin Board</span>
+          <span class="tile-sub">Uno Virtual</span>
+        </div>
+        <div class="tile-body">
+          <div class="pin-list">
+            <div class="pin-row" id="pR">
+              <span class="pin-id"><span class="led"></span>D2 • LED Merah</span>
+              <span class="pin-val">LOW</span>
+            </div>
+            <div class="pin-row" id="pY">
+              <span class="pin-id"><span class="led"></span>D3 • LED Kuning</span>
+              <span class="pin-val">LOW</span>
+            </div>
+            <div class="pin-row hi-green" id="pG">
+              <span class="pin-id"><span class="led"></span>D4 • LED Hijau</span>
+              <span class="pin-val">HIGH</span>
+            </div>
+            <div class="pin-row" id="pS">
+              <span class="pin-id"><span class="led"></span>D7 • Sensor IR</span>
+              <span class="pin-val">LOW</span>
+            </div>
+            <div class="pin-row" id="pB">
+              <span class="pin-id"><span class="led"></span>D8 • Buzzer</span>
+              <span class="pin-val">LOW</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="tile tile-logs">
+        <div class="tile-head">
+          <span class="tile-title">Riwayat Sensor</span>
+          <span class="tile-sub" id="logCnt">0 catatan</span>
+        </div>
+        <div class="log-box" id="logBox">
+          <div class="log-empty">Belum ada pergerakan yang melewati garis sensor.</div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="foot">
+      <span>Simulasi sistem E-Tilang berbasis browser tanpa perangkat fisik Arduino.</span>
+      <span>Dikembangkan oleh <strong>Zann</strong></span>
+    </footer>
+  </div>
+
+  <script>
+    /**
+     * Mensimulasikan Piezo Buzzer Arduino memakai Web Audio API tanpa file audio tambahan.
+     */
+    class Buzzer {
+      constructor() {
+        this.ctx = null;
+        this.on = true;
+        this.until = 0;
+      }
+
+      /**
+       * Memutar nada pendek dengan frekuensi dan durasi yang ditentukan.
+       * @param {number} freq Frekuensi nada dalam Hertz.
+       * @param {number} ms Lama bunyi dalam milidetik.
+       * @param {OscillatorType} wave Jenis gelombang suara.
+       */
+      beep(freq, ms, wave = 'square') {
+        if (!this.on) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!this.ctx) this.ctx = new AudioCtx();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = wave;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.055, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + ms / 1000);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + ms / 1000);
+        this.until = Math.max(this.until, performance.now() + ms);
+      }
+
+      /**
+       * Memainkan bunyi alarm dua nada saat sensor menangkap pelanggaran.
+       */
+      alarm() {
+        this.beep(880, 110);
+        setTimeout(() => this.beep(620, 170), 125);
+      }
+
+      /**
+       * Mengembalikan status aktif pin buzzer pada waktu sekarang.
+       * @param {number} now Timestamp performance.now().
+       */
+      active(now) {
+        return this.on && now < this.until;
+      }
+    }
+
+    /**
+     * Mengatur siklus lampu lalu lintas non-blocking layaknya fungsi millis() pada Arduino.
+     */
+    class TrafficLight {
+      constructor() {
+        this.seq = [
+          { id: 'GREEN', name: 'Hijau', col: '#22c55e', dur: 5000 },
+          { id: 'YELLOW', name: 'Kuning', col: '#f59e0b', dur: 2000 },
+          { id: 'RED', name: 'Merah', col: '#ef4444', dur: 5000 }
+        ];
+        this.idx = 0;
+        this.auto = true;
+        this.since = performance.now();
+      }
+
+      /**
+       * Memperbarui giliran lampu saat mode otomatis aktif.
+       * @param {number} now Timestamp performance.now().
+       */
+      update(now) {
+        if (!this.auto) return;
+        if (now - this.since >= this.seq[this.idx].dur) {
+          this.idx = (this.idx + 1) % this.seq.length;
+          this.since = now;
+        }
+      }
+
+      /**
+       * Memindahkan mode lampu ke otomatis atau menahan warna tertentu secara manual.
+       * @param {string} mode Salah satu dari AUTO, RED, YELLOW, GREEN.
+       */
+      setMode(mode) {
+        if (mode === 'AUTO') {
+          this.auto = true;
+          this.since = performance.now();
+          return;
+        }
+        this.auto = false;
+        this.idx = this.seq.findIndex(s => s.id === mode);
+      }
+
+      /**
+       * Mengambil objek fase lampu yang sedang menyala.
+       */
+      curr() {
+        return this.seq[this.idx];
+      }
+
+      /**
+       * Menghitung sisa waktu dalam detik serta rasio bar (0 sampai 1).
+       * @param {number} now Timestamp performance.now().
+       */
+      stat(now) {
+        if (!this.auto) return { txt: 'Manual', ratio: 1 };
+        const dur = this.seq[this.idx].dur;
+        const left = Math.max(0, dur - (now - this.since));
+        return { txt: `${(left / 1000).toFixed(1)}d`, ratio: left / dur };
+      }
+    }
+
+    /**
+     * Menggambar grafik garis kecepatan real-time beserta garis batas kecepatan.
+     */
+    class Sparkline {
+      constructor(canvas) {
+        this.cv = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.data = new Array(56).fill(0);
+        this.w = 0;
+        this.h = 0;
+      }
+
+      /**
+       * Menyesuaikan resolusi canvas grafik mengikuti ukuran kartu dan kepadatan piksel.
+       */
+      resize() {
+        const r = this.cv.parentElement.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        this.w = r.width;
+        this.h = r.height;
+        this.cv.width = this.w * dpr;
+        this.cv.height = this.h * dpr;
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+
+      /**
+       * Memasukkan sampel kecepatan terbaru dan membuang sampel terlama.
+       * @param {number} val Kecepatan saat ini dalam km/jam.
+       */
+      push(val) {
+        this.data.push(val);
+        if (this.data.length > 56) this.data.shift();
+      }
+
+      /**
+       * Merender garis batas dan kurva kecepatan di atas canvas sparkline.
+       * @param {number} limit Batas kecepatan aktif dalam km/jam.
+       */
+      draw(limit) {
+        const ctx = this.ctx;
+        const maxV = Math.max(150, limit + 30, ...this.data);
+        const pad = 10;
+        const ih = this.h - pad * 2;
+        const yOf = v => this.h - pad - (v / maxV) * ih;
+
+        ctx.clearRect(0, 0, this.w, this.h);
+
+        const ly = yOf(limit);
+        ctx.strokeStyle = 'rgba(245, 158, 11, 0.45)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, ly);
+        ctx.lineTo(this.w, ly);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const step = this.w / (this.data.length - 1);
+        const last = this.data[this.data.length - 1];
+        const col = last > limit ? '#ef4444' : '#38bdf8';
+
+        ctx.beginPath();
+        this.data.forEach((v, i) => {
+          const x = i * step;
+          const y = yOf(v);
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = col;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.lineTo(this.w, this.h);
+        ctx.lineTo(0, this.h);
+        ctx.closePath();
+        ctx.fillStyle = last > limit ? 'rgba(239, 68, 68, 0.12)' : 'rgba(56, 189, 248, 0.12)';
+        ctx.fill();
+      }
+    }
+
+    /**
+     * Pengendali utama simulasi lintasan, pembacaan mouse/sentuhan, dan pencatatan tilang.
+     */
+    class TrafficSim {
+      constructor() {
+        this.cv = document.getElementById('road');
+        this.ctx = this.cv.getContext('2d');
+        this.spark = new Sparkline(document.getElementById('spark'));
+        this.light = new TrafficLight();
+        this.buz = new Buzzer();
+
+        this.el = {
+          inMode: document.getElementById('inMode'),
+          hudSpd: document.getElementById('hudSpd'),
+          hudLgt: document.getElementById('hudLgt'),
+          hudTmr: document.getElementById('hudTmr'),
+          hudBar: document.getElementById('hudBar'),
+          notice: document.getElementById('notice'),
+          bigSpd: document.getElementById('bigSpd'),
+          peakSpd: document.getElementById('peakSpd'),
+          spdState: document.getElementById('spdState'),
+          limHead: document.getElementById('limHead'),
+          limTxt: document.getElementById('limTxt'),
+          limIn: document.getElementById('limInput'),
+          stTot: document.getElementById('stTot'),
+          stSpd: document.getElementById('stSpd'),
+          stRed: document.getElementById('stRed'),
+          logBox: document.getElementById('logBox'),
+          logCnt: document.getElementById('logCnt'),
+          btnBuz: document.getElementById('btnBuz'),
+          pins: {
+            r: [document.getElementById('pR'), 'hi-red'],
+            y: [document.getElementById('pY'), 'hi-amber'],
+            g: [document.getElementById('pG'), 'hi-green'],
+            s: [document.getElementById('pS'), 'hi-sky'],
+            b: [document.getElementById('pB'), 'hi-amber']
+          }
+        };
+
+        this.w = 0;
+        this.h = 0;
+        this.limit = 60;
+        this.spd = 0;
+        this.peak = 0;
+        this.prev = null;
+        this.curr = null;
+        this.down = false;
+        this.samples = [];
+        this.trail = [];
+        this.logs = [];
+        this.flash = 0;
+        this.hit = 0;
+        this.lastTrig = 0;
+        this.lastSpark = 0;
+        this.noticeTmr = null;
+        this.cnt = { tot: 0, spd: 0, red: 0 };
+
+        this.bind();
+        this.resize();
+        requestAnimationFrame(t => this.loop(t));
+      }
+
+      /**
+       * Menghubungkan event mouse, sentuhan jari HP, resize layar, dan seluruh tombol UI.
+       */
+      bind() {
+        window.addEventListener('resize', () => this.resize());
+
+        this.cv.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+        this.cv.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+        this.cv.addEventListener('pointerdown', e => {
+          this.cv.setPointerCapture(e.pointerId);
+          this.down = true;
+          this.setInputLabel(e.pointerType);
+          this.resetTrack(this.pt(e));
+        });
+
+        this.cv.addEventListener('pointerenter', e => {
+          if (e.pointerType !== 'touch') {
+            this.setInputLabel(e.pointerType);
+            this.resetTrack(this.pt(e));
+          }
+        });
+
+        this.cv.addEventListener('pointermove', e => {
+          if (e.pointerType === 'touch' && !this.down) return;
+          this.setInputLabel(e.pointerType);
+          this.onMove(this.pt(e));
+        });
+
+        const stop = () => {
+          this.down = false;
+          this.prev = null;
+          this.curr = null;
+          this.samples = [];
+          this.spd = 0;
+        };
+
+        this.cv.addEventListener('pointerup', stop);
+        this.cv.addEventListener('pointercancel', stop);
+        this.cv.addEventListener('pointerleave', stop);
+
+        this.el.limIn.addEventListener('input', e => {
+          this.limit = Number(e.target.value);
+          this.el.limTxt.textContent = this.limit;
+          this.el.limHead.textContent = this.limit;
+        });
+
+        this.el.btnBuz.addEventListener('click', () => {
+          this.buz.on = !this.buz.on;
+          this.el.btnBuz.textContent = `Suara: ${this.buz.on ? 'Aktif' : 'Mati'}`;
+          this.el.btnBuz.classList.toggle('btn-on', this.buz.on);
+        });
+
+        document.getElementById('btnCsv').addEventListener('click', () => this.exportCsv());
+        document.getElementById('btnReset').addEventListener('click', () => this.clearAll());
+
+        const modes = [
+          ['mAuto', 'AUTO'],
+          ['mRed', 'RED'],
+          ['mYellow', 'YELLOW'],
+          ['mGreen', 'GREEN']
+        ];
+
+        modes.forEach(([id, mode]) => {
+          document.getElementById(id).addEventListener('click', () => {
+            this.light.setMode(mode);
+            modes.forEach(([bid]) => document.getElementById(bid).classList.toggle('active', bid === id));
+          });
+        });
+      }
+
+      /**
+       * Mengubah teks indikator perangkat input yang sedang digunakan.
+       * @param {string} type Nilai pointerType (mouse, touch, atau pen).
+       */
+      setInputLabel(type) {
+        const map = { touch: 'Layar Sentuh (HP)', pen: 'Stylus', mouse: 'Mouse (PC)' };
+        this.el.inMode.textContent = map[type] || 'Input Aktif';
+      }
+
+      /**
+       * Menyesuaikan ukuran canvas jalan dan canvas grafik ke skala DPI perangkat.
+       */
+      resize() {
+        const r = this.cv.parentElement.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        this.w = r.width;
+        this.h = r.height;
+        this.cv.width = this.w * dpr;
+        this.cv.height = this.h * dpr;
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.spark.resize();
+      }
+
+      /**
+       * Mengambil koordinat lokal pointer di dalam area canvas jalan.
+       * @param {PointerEvent} e Objek PointerEvent dari browser.
+       */
+      pt(e) {
+        const r = this.cv.getBoundingClientRect();
+        return { x: e.clientX - r.left, y: e.clientY - r.top, t: performance.now() };
+      }
+
+      /**
+       * Mengatur titik awal pelacakan baru agar perpindahan kursor awal tidak terbaca ngebut.
+       * @param {{x:number, y:number, t:number}} p Koordinat awal pointer.
+       */
+      resetTrack(p) {
+        this.prev = p;
+        this.curr = p;
+        this.samples = [p];
+      }
+
+      /**
+       * Menghitung posisi jalan dan ketinggian garis sensor secara proporsional.
+       */
+      geom() {
+        const rw = Math.min(this.w * 0.54, 280);
+        const rx = (this.w - rw) / 2;
+        const sy = this.h * 0.5;
+        return { rx, rw, sy };
+      }
+
+      /**
+       * Menghitung kecepatan rata-rata dalam jendela waktu 80 ms dan menguji garis sensor.
+       * @param {{x:number, y:number, t:number}} p Koordinat pointer terbaru.
+       */
+      onMove(p) {
+        if (!this.prev) {
+          this.resetTrack(p);
+          return;
+        }
+
+        this.curr = p;
+        this.samples.push(p);
+        this.samples = this.samples.filter(s => p.t - s.t <= 80);
+
+        let dist = 0;
+        for (let i = 1; i < this.samples.length; i++) {
+          dist += Math.hypot(this.samples[i].x - this.samples[i - 1].x, this.samples[i].y - this.samples[i - 1].y);
+        }
+
+        const dt = Math.max(p.t - this.samples[0].t, 12);
+        this.spd = Math.round(((dist / dt) * 1000) * 0.075);
+
+        if (this.spd > this.peak) {
+          this.peak = this.spd;
+          this.el.peakSpd.textContent = this.peak;
+        }
+
+        this.trail.push({ x: p.x, y: p.y, spd: this.spd, life: 1 });
+        if (this.trail.length > 26) this.trail.shift();
+
+        this.checkSensor(this.prev, p);
+        this.prev = p;
+      }
+
+      /**
+       * Mendeteksi perpotongan segmen lintasan dengan garis sensor jalan (anti-tembus).
+       * @param {{x:number, y:number, t:number}} a Titik posisi sebelumnya.
+       * @param {{x:number, y:number, t:number}} b Titik posisi terbaru.
+       */
+      checkSensor(a, b) {
+        const { rx, rw, sy } = this.geom();
+        const crossed = (a.y < sy && b.y >= sy) || (a.y > sy && b.y <= sy);
+        if (!crossed || b.y === a.y) return;
+
+        const ix = a.x + ((sy - a.y) / (b.y - a.y)) * (b.x - a.x);
+        if (ix < rx || ix > rx + rw) return;
+
+        if (b.t - this.lastTrig < 520) return;
+        this.lastTrig = b.t;
+        this.hit = 1;
+
+        const lgt = this.light.curr();
+        const isRed = lgt.id === 'RED';
+        const isFast = this.spd > this.limit;
+
+        if (isRed || isFast) {
+          this.recordViolation(isRed, isFast, lgt.name);
+        } else {
+          this.buz.beep(1240, 45, 'sine');
+          const msg = `Melintas aman (${this.spd} km/jam)`;
+          this.showNotice(msg, false);
+          this.pushLog('Aman', msg, lgt.name, true);
+        }
+      }
+
+      /**
+       * Mencatat pelanggaran, menaikkan hitungan statistik, dan menyalakan alarm buzzer.
+       * @param {boolean} isRed True jika melintas saat lampu merah.
+       * @param {boolean} isFast True jika kecepatan di atas batas.
+       * @param {string} lgtName Nama warna lampu saat kejadian.
+       */
+      recordViolation(isRed, isFast, lgtName) {
+        this.flash = 1;
+        this.buz.alarm();
+        this.cnt.tot++;
+        if (isRed) this.cnt.red++;
+        if (isFast) this.cnt.spd++;
+
+        this.el.stTot.textContent = this.cnt.tot;
+        this.el.stSpd.textContent = this.cnt.spd;
+        this.el.stRed.textContent = this.cnt.red;
+
+        let msg = '';
+        if (isRed && isFast) msg = `Tilang ganda • Merah & ${this.spd} km/jam`;
+        else if (isRed) msg = `Terobos lampu merah (${this.spd} km/jam)`;
+        else msg = `Kecepatan berlebih (${this.spd} km/jam)`;
+
+        this.showNotice(msg, true);
+        this.pushLog('Pelanggaran', msg, lgtName, false);
+      }
+
+      /**
+       * Memunculkan notifikasi singkat di bagian bawah area jalan.
+       * @param {string} text Isi pesan notifikasi.
+       * @param {boolean} bad True untuk gaya pelanggaran merah.
+       */
+      showNotice(text, bad) {
+        clearTimeout(this.noticeTmr);
+        this.el.notice.textContent = text;
+        this.el.notice.className = `notice show ${bad ? 'bad' : 'ok'}`;
+        this.noticeTmr = setTimeout(() => this.el.notice.classList.remove('show'), 1800);
+      }
+
+      /**
+       * Menyimpan data peristiwa ke memori log sekaligus menampilkannya di kartu Riwayat Sensor.
+       * @param {string} status Kategori singkat (Aman / Pelanggaran).
+       * @param {string} msg Keterangan kejadian.
+       * @param {string} lamp Warna lampu saat melintas.
+       * @param {boolean} ok True jika melintas tanpa pelanggaran.
+       */
+      pushLog(status, msg, lamp, ok) {
+        const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
+        this.logs.unshift({ time, status, msg, spd: this.spd, lim: this.limit, lamp });
+        if (this.logs.length > 200) this.logs.pop();
+
+        const empty = this.el.logBox.querySelector('.log-empty');
+        if (empty) empty.remove();
+
+        const row = document.createElement('div');
+        row.className = `log-item${ok ? ' ok' : ''}`;
+        row.innerHTML = `
+          <div class="log-main">
+            <span class="log-dot"></span>
+            <span class="log-txt">${msg}</span>
+          </div>
+          <span class="log-t">${time}</span>
+        `;
+        this.el.logBox.prepend(row);
+
+        while (this.el.logBox.children.length > 35) {
+          this.el.logBox.lastElementChild.remove();
+        }
+        this.el.logCnt.textContent = `${this.logs.length} catatan`;
+      }
+
+      /**
+       * Mengunduh seluruh catatan riwayat sensor sesi ini ke dalam file CSV.
+       */
+      exportCsv() {
+        if (!this.logs.length) {
+          this.showNotice('Belum ada catatan untuk diunduh', true);
+          return;
+        }
+        const head = 'Waktu,Status,Keterangan,Kecepatan (km/jam),Batas (km/jam),Lampu';
+        const rows = this.logs.map(r => `${r.time},${r.status},"${r.msg}",${r.spd},${r.lim},${r.lamp}`);
+        const blob = new Blob([[head, ...rows].join('\n')], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `riwayat-etilang-${Date.now()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      /**
+       * Membersihkan seluruh hitungan statistik, kecepatan puncak, dan riwayat sensor.
+       */
+      clearAll() {
+        this.cnt = { tot: 0, spd: 0, red: 0 };
+        this.peak = 0;
+        this.logs = [];
+        this.el.stTot.textContent = '0';
+        this.el.stSpd.textContent = '0';
+        this.el.stRed.textContent = '0';
+        this.el.peakSpd.textContent = '0';
+        this.el.logCnt.textContent = '0 catatan';
+        this.el.logBox.innerHTML = '<div class="log-empty">Belum ada pergerakan yang melewati garis sensor.</div>';
+      }
+
+      /**
+       * Memperbarui seluruh angka pada antarmuka serta status LED pin virtual.
+       * @param {number} now Timestamp performance.now().
+       */
+      syncUI(now) {
+        const lgt = this.light.curr();
+        const st = this.light.stat(now);
+        const over = this.spd > this.limit;
+
+        this.el.hudSpd.textContent = this.spd;
+        this.el.hudSpd.style.color = over ? '#f87171' : '#f4f4f5';
+        this.el.bigSpd.textContent = this.spd;
+        this.el.bigSpd.style.color = over ? '#f87171' : '#f4f4f5';
+        this.el.spdState.textContent = this.spd === 0 ? 'Diam' : over ? 'Di atas batas' : 'Kecepatan aman';
+        this.el.spdState.style.color = this.spd === 0 ? '#71717a' : over ? '#f87171' : '#86efac';
+
+        this.el.hudLgt.textContent = lgt.name;
+        this.el.hudLgt.style.color = lgt.col;
+        this.el.hudTmr.textContent = st.txt;
+        this.el.hudBar.style.width = `${Math.round(st.ratio * 100)}%`;
+        this.el.hudBar.style.background = lgt.col;
+
+        const setPin = ([row, cls], on) => {
+          row.className = `pin-row${on ? ` ${cls}` : ''}`;
+          row.lastElementChild.textContent = on ? 'HIGH' : 'LOW';
+        };
+
+        setPin(this.el.pins.r, lgt.id === 'RED');
+        setPin(this.el.pins.y, lgt.id === 'YELLOW');
+        setPin(this.el.pins.g, lgt.id === 'GREEN');
+        setPin(this.el.pins.s, this.hit > 0.2);
+        setPin(this.el.pins.b, this.buz.active(now));
+      }
+
+      /**
+       * Menggambar visual jalan, marka, sinar sensor optik, tiang lampu, dan jejak gerakan.
+       */
+      drawRoad() {
+        const ctx = this.ctx;
+        const { rx, rw, sy } = this.geom();
+        const lgt = this.light.curr().id;
+
+        ctx.clearRect(0, 0, this.w, this.h);
+
+        ctx.fillStyle = '#09090b';
+        ctx.fillRect(0, 0, this.w, this.h);
+
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+        for (let x = 14; x < this.w; x += 26) {
+          for (let y = 14; y < this.h; y += 26) {
+            ctx.fillRect(x, y, 1.5, 1.5);
+          }
+        }
+
+        ctx.fillStyle = '#141418';
+        ctx.fillRect(rx, 0, rw, this.h);
+
+        ctx.strokeStyle = '#32323b';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(rx, 0);
+        ctx.lineTo(rx, this.h);
+        ctx.moveTo(rx + rw, 0);
+        ctx.lineTo(rx + rw, this.h);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(244, 244, 245, 0.2)';
+        ctx.setLineDash([14, 14]);
+        ctx.beginPath();
+        ctx.moveTo(rx + rw / 2, 0);
+        ctx.lineTo(rx + rw / 2, this.h);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = 'rgba(244, 244, 245, 0.09)';
+        const bars = 6;
+        const bw = (rw - 36) / (bars * 2 - 1);
+        for (let i = 0; i < bars; i++) {
+          ctx.fillRect(rx + 18 + i * bw * 2, sy + 14, bw, 36);
+        }
+
+        const beamCol = this.hit > 0.1
+          ? '#ef4444'
+          : lgt === 'RED' ? '#f87171' : '#38bdf8';
+
+        ctx.save();
+        ctx.strokeStyle = beamCol;
+        ctx.lineWidth = 2 + this.hit * 2.5;
+        ctx.shadowColor = beamCol;
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.moveTo(rx, sy);
+        ctx.lineTo(rx + rw, sy);
+        ctx.stroke();
+
+        ctx.fillStyle = '#1c1c21';
+        ctx.strokeStyle = beamCol;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(rx - 10, sy - 7, 10, 14, 3);
+        ctx.roundRect(rx + rw, sy - 7, 10, 14, 3);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        ctx.fillStyle = '#a1a1aa';
+        ctx.font = '600 10px ui-monospace, SFMono-Regular, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('GARIS SENSOR IR • PIN D7', this.w / 2, sy - 10);
+
+        const lx = Math.min(rx + rw + 20, this.w - 44);
+        const ly = sy - 50;
+        ctx.fillStyle = '#111114';
+        ctx.strokeStyle = '#32323b';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.roundRect(lx, ly, 34, 96, 9);
+        ctx.fill();
+        ctx.stroke();
+
+        const lamps = [
+          ['RED', '#ef4444', ly + 20],
+          ['YELLOW', '#f59e0b', ly + 48],
+          ['GREEN', '#22c55e', ly + 76]
+        ];
+
+        lamps.forEach(([id, col, cy]) => {
+          const on = lgt === id;
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(lx + 17, cy, 8, 0, Math.PI * 2);
+          ctx.fillStyle = on ? col : '#222228';
+          if (on) {
+            ctx.shadowColor = col;
+            ctx.shadowBlur = 14;
+          }
+          ctx.fill();
+          ctx.restore();
+        });
+
+        for (let i = 1; i < this.trail.length; i++) {
+          const a = this.trail[i - 1];
+          const b = this.trail[i];
+          ctx.strokeStyle = b.spd > this.limit
+            ? `rgba(239, 68, 68, ${b.life * 0.9})`
+            : `rgba(56, 189, 248, ${b.life * 0.9})`;
+          ctx.lineWidth = 3.5 * b.life;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+
+        if (this.curr) {
+          const over = this.spd > this.limit;
+          const col = over ? '#ef4444' : '#38bdf8';
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(this.curr.x, this.curr.y, 14, 0, Math.PI * 2);
+          ctx.fillStyle = over ? 'rgba(239, 68, 68, 0.16)' : 'rgba(56, 189, 248, 0.16)';
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(this.curr.x, this.curr.y, 7, 0, Math.PI * 2);
+          ctx.fillStyle = col;
+          ctx.fill();
+          ctx.strokeStyle = '#fafafa';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        if (this.flash > 0.01) {
+          ctx.fillStyle = `rgba(239, 68, 68, ${this.flash * 0.24})`;
+          ctx.fillRect(0, 0, this.w, this.h);
+        }
+      }
+
+      /**
+       * Loop utama 60 FPS yang meniru alur eksekusi fungsi loop() di Arduino.
+       * @param {number} now Timestamp frame saat ini.
+       */
+      loop(now) {
+        this.light.update(now);
+        this.syncUI(now);
+
+        this.flash *= 0.85;
+        this.hit *= 0.88;
+        this.trail.forEach(p => { p.life -= 0.045; });
+        this.trail = this.trail.filter(p => p.life > 0.05);
+
+        if (this.curr && now - this.curr.t > 120) {
+          this.spd = Math.max(0, Math.round(this.spd * 0.75));
+        }
+
+        if (now - this.lastSpark >= 60) {
+          this.spark.push(this.spd);
+          this.lastSpark = now;
+        }
+
+        this.drawRoad();
+        this.spark.draw(this.limit);
+        requestAnimationFrame(t => this.loop(t));
+      }
+    }
+
+    new TrafficSim();
+  </script>
+</body>
+</html>
